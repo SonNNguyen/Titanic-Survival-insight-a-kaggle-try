@@ -1,0 +1,238 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
+
+train= pd.read_csv('https://storage.googleapis.com/kaggle-competitions-data/kaggle/3136/train.csv?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1554284816&Signature=UjtrOvuNiCGoRCcwmEdubY3AOxmE6zpaxBFQBEn78gf50FNc7LfoszFyPCHd%2B4%2FHPy1NapOoPophK5rj6gkkSxrfouUg7nRJ798GioWNOSXLxdq3XzossFL63wJShyzeSu2hYIo%2BS9r1dSXpn%2B9hJ14pe%2Ba%2BGwEjzjhBrYDLVIqmAkzhWKk2Og0byJ%2FQ9Qeek7XIiLQ0Tp%2Fa3S9ihrjKcqnXUc%2FXg5mEtxgjRMXv3awZe1jrNeUJFoP1yZzmudXYpWhI2uPKGllPHjMpBB4JWgZ6draIDY9CYwXI0n7sYiSP%2Be1IYLc%2B4zvg24DFHOoSpOYNZ0bDCuUu72qBsBMvtg%3D%3D')
+train.head()
+
+train.columns
+
+train.dtypes
+
+sns.set(color_codes=True)
+
+#Survival/Age/Sex
+
+table1= train.loc[:, ['Survived','Sex','Age']].copy()
+table1.isna().sum()
+
+table1.dropna(inplace=True)
+table1.head()
+
+
+
+
+plt.title('Total Age Distribution')
+sns.distplot(table1['Age'], color='orange', hist=False, rug=True, label='Total')
+plt.scatter(table1['Age'].mean(), 0, color='orange')
+
+sns.distplot(table1.loc[(table1['Sex']=='male'), ['Age']].copy(), color= 'blue', hist=False, rug=True, label= 'Male')
+sns.distplot(table1.loc[(table1['Sex']=='female'), ['Age']].copy(), color= 'red', hist=False, rug=True, label= 'Female')
+plt.scatter(table1.loc[(table1['Sex']=='male'),['Age']].mean(), 0, color='blue')
+plt.scatter(table1.loc[(table1['Sex']=='female'),['Age']].mean(), 0, color='red')
+
+
+live= table1.loc[(table1['Survived']==0), ['Sex', 'Age']].copy()
+die= table1.loc[(table1['Survived']==1), ['Sex', 'Age']].copy()
+
+plt.title('Survived ages')
+sns.distplot(live['Age'], hist=False, rug=True,label= 'Total')
+plt.scatter(live['Age'].mean(), 0, color='red')
+
+plt.title('Survived ages by sex')
+sns.distplot(live.loc[(live['Sex']=='male'), ['Age']].copy(), color= 'blue', hist=False, rug=True, label= 'Male')
+sns.distplot(live.loc[(live['Sex']=='female'), ['Age']].copy(), color= 'red', hist=False, rug=True, label= 'Female')
+plt.scatter(live.loc[(live['Sex']=='male')].mean(), 0, color='blue')
+plt.scatter(live.loc[(live['Sex']=='female')].mean(), 0, color='red')
+
+plt.title('Fatality ages')
+sns.distplot(die['Age'], hist=False, rug=True, label= 'Total')
+plt.scatter(die['Age'].mean(), 0, color='red')
+
+plt.title('Fatality ages by sex')
+sns.distplot(die.loc[(die['Sex']=='male'), ['Age']].copy(), color= 'blue', hist=False, rug=True, label= 'Male')
+sns.distplot(die.loc[(die['Sex']=='female'), ['Age']].copy(), color= 'red', hist=False, rug=True, label= 'Female')
+plt.scatter(die.loc[(die['Sex']=='male')].mean(), 0, color='blue')
+plt.scatter(die.loc[(die['Sex']=='female')].mean(), 0, color='red')
+
+diey= die.loc[(die['Sex']=='male'), ['Age']].reset_index().drop(['index'], axis=1).copy()
+diey.rename(columns={'Age':'Male Age Dead'}, inplace=True)
+
+livey= live.loc[(live['Sex']=='male'), ['Age']].reset_index().drop(['index'], axis=1).copy()
+livey.rename(columns={'Age':'Male Age Survived'}, inplace=True)
+
+Male_survival= pd.concat([livey, diey], axis=1, sort=False)
+Male_survival
+
+plt.title('Survival in Male')
+sns.distplot(Male_survival['Male Age Survived'], color= 'green', hist=False, rug=True, label= 'Survived')
+sns.distplot(Male_survival['Male Age Dead'], color= 'black', hist=False, rug=True, label= 'Death')
+plt.scatter(Male_survival['Male Age Survived'].mean(), 0, color='green')
+plt.scatter(Male_survival['Male Age Dead'].mean(), 0, color='black')
+
+diex= die.loc[(die['Sex']=='female'), ['Age']].reset_index().drop(['index'], axis=1).copy()
+diex.rename(columns={'Age':'Female Age Dead'}, inplace=True)
+
+livex= live.loc[(live['Sex']=='female'), ['Age']].reset_index().drop(['index'], axis=1).copy()
+livex.rename(columns={'Age':'Female Age Survived'}, inplace=True)
+
+Female_survival= pd.concat([livex, diex], axis=1, sort=False)
+Female_survival
+
+plt.title('Survival in Female')
+sns.distplot(Female_survival['Female Age Survived'], color= 'green', hist=False, rug=True, label= 'Survived' )
+sns.distplot(Female_survival['Female Age Dead'], color= 'black', hist=False, rug=True, label= 'Death')
+plt.scatter(Female_survival['Female Age Survived'].mean(), 0, color='green')
+plt.scatter(Female_survival['Female Age Dead'].mean(), 0, color='black')
+
+#Survival/Pclass/Embarked
+
+table2= train.loc[:, ['Survived','Pclass','Embarked']].copy()
+table2.isna().sum()
+
+table2.dropna(inplace=True)
+table2.head()
+
+#counting total
+
+first= len(table2.loc[(table2['Pclass']==1)])
+second= len(table2.loc[(table2['Pclass']==2)])
+third= len(table2.loc[(table2['Pclass']==3)])
+
+c= len(table2.loc[(table2['Embarked']=='C')])
+s= len(table2.loc[(table2['Embarked']=='S')])
+q= len(table2.loc[(table2['Embarked']=='Q')])
+
+
+#Survival count
+
+#live
+firstl= len(livedemo.loc[(livedemo['Pclass']==1)])
+secondl= len(livedemo.loc[(livedemo['Pclass']==2)])
+thirdl= len(livedemo.loc[(livedemo['Pclass']==3)])
+
+cl= len(livedemo.loc[(livedemo['Embarked']=='C')])
+sl= len(livedemo.loc[(livedemo['Embarked']=='S')])
+ql= len(livedemo.loc[(livedemo['Embarked']=='Q')])
+
+
+labels1 = '1st', '2nd', '3rd'
+count1 = [first, second, third]
+
+
+
+sns.set_palette("deep")
+
+f, (ax1) = plt.subplots(1, 1, sharey=True)
+ax1.pie(count1, labels=labels1, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+ax1.axis('equal')
+
+ax1.set_title('Pclass')
+
+
+sns.set(style="whitegrid")
+sns.set_palette("deep")
+g = sns.catplot(x="Pclass", y='Survived', hue=None, data=table2,
+                height=6, kind="bar", palette="muted")
+g.despine(left=True)
+g.set_ylabels("Survival Possibility")
+
+labels1 = '1st', '2nd', '3rd'
+count1 = [firstl, secondl, thirdl]
+
+
+
+sns.set_palette("deep")
+
+f, (ax1) = plt.subplots(1, 1, sharey=True)
+ax1.pie(count1, labels=labels1, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+ax1.axis('equal')
+
+ax1.set_title('Pclass')
+
+
+sns.set_palette("pastel")
+labels2 = 's', 'c','q'
+count2 = [s, c , q]
+
+f, ( ax2) = plt.subplots(1, 1, sharey=True)
+
+ax2.pie(count2, labels=labels2, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+ax2.axis('equal') 
+ax2.set_title('Embarked')
+
+plt.show()
+
+sns.set(style="whitegrid")
+sns.set_palette("pastel")
+g = sns.catplot(x="Embarked", y='Survived', hue=None, data=table2,
+                height=6, kind="bar", palette="muted")
+g.despine(left=True)
+g.set_ylabels("Survival Possibility")
+
+sns.set_palette("pastel")
+labels2 = 's', 'c','q'
+count2 = [sl, cl , ql]
+
+f, ( ax2) = plt.subplots(1, 1, sharey=True)
+
+ax2.pie(count2, labels=labels2, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+ax2.axis('equal') 
+ax2.set_title('Embarked')
+
+plt.show()
+
+sns.set(style="whitegrid")
+sns.set_palette("pastel")
+g = sns.catplot(x="Embarked", y='Survived', hue='Pclass', data=table2,
+                height=6, kind="bar", palette="muted")
+g.despine(left=True)
+g.set_ylabels("Count")
+
+#Survival/sibsp/parch
+
+table3= train.loc[:, ['Survived','SibSp','Parch']].copy()
+table3.isna().sum()
+
+table3['SibSp'].unique()
+
+table3['Parch'].unique()
+
+table3['Parch'].plot(kind= 'hist' )
+
+table3['SibSp'].plot(kind= 'hist')
+
+table3['Company Status']= table3['SibSp'] + table3['Parch']
+table3.drop(['SibSp', 'Parch'], axis=1, inplace= True)
+table3.head()
+
+table3fix = table3.replace (table3.loc[(table3['Company Status']>1), ['Company Status']],value= 1)
+ps0=len(table3fix.loc[(table3fix['Company Status']==0)])
+ps= len(table3fix.loc[(table3fix['Company Status']==1)])
+
+labels = 'Single', 'Group'
+count = [ps0, ps]
+
+sns.set_palette("deep")
+
+f, (ax1) = plt.subplots(1, 1, sharey=True)
+ax1.pie(count, labels=labels, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+ax1.axis('equal')
+
+ax1.set_title('Passengers company status')
+
+sns.set(style="whitegrid")
+sns.set_palette("pastel")
+g = sns.catplot(x="Company Status", y='Survived', hue=None, data=table3fix,
+                height=6, kind="bar", palette="muted")
+g.despine(left=True)
+g.set_ylabels("Survival Possibility")
+
+#The-end
